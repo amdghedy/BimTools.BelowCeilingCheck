@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using BimTools.BelowCeilingCheck.Models;
+using BimTools.BelowCeilingCheck.Infrastructure;
 
 namespace BimTools.BelowCeilingCheck.Services
 {
@@ -57,7 +58,7 @@ namespace BimTools.BelowCeilingCheck.Services
                         continue;
                     }
 
-                    BuiltInCategory category = (BuiltInCategory)element.Category.Id.IntegerValue;
+                    BuiltInCategory category = (BuiltInCategory)ElementIdCompat.GetValue(element.Category.Id);
                     if (categories.Contains(category))
                     {
                         result.Add(id);
