@@ -1,0 +1,58 @@
+name: Build Below Ceiling Check for Revit 2020-2027
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Revit ${{ matrix.revit }} / build
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        revit: ["2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027"]
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Restore and build
+        shell: pwsh
+        run: >
+          dotnet build ./BimTools.BelowCeilingCheck.csproj
+          --configuration Release
+          -p:RevitVersion=${{ matrix.revit }}
+          -p:DeployAddin=false
+          -p:BaseOutputPath="artifacts/Revit${{ matrix.revit }}/"
+
+      - name: Stage plugin manifest
+        shell: pwsh
+        run: |
+          $out = Get-ChildItem "artifacts/Revit${{ matrix.revit }}" -Directory -Recurse |
+            Where-Object { Test-Path (Join-Path $_.FullName "BimTools.BelowCeilingCheck.dll") } |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $out) { throw "Build output DLL was not found for Revit ${{ matrix.revit }}." }
+          Copy-Item "./BelowCeilingCheck.addin" $out -Force
+          "Build output: $out"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BelowCeilingCheck-Revit${{ matrix.revit }}
+          path: artifacts/Revit${{ matrix.revit }}/
+          if-no-files-found: error
+          retention-days: 14
