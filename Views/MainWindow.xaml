@@ -1,0 +1,420 @@
+<Window x:Class="BimTools.BelowCeilingCheck.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="BIM TOOLS - Below Ceiling Check"
+        Width="1300" Height="820" MinWidth="1000" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="#F3F5F8" FontFamily="Segoe UI" FontSize="12"
+        Closing="Window_Closing">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="MinWidth" Value="64" />
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#1F3A5F" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,8,0,3" />
+            <Setter Property="Foreground" Value="#52606D" />
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Padding" Value="4,3" />
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="4,3" />
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,3" />
+        </Style>
+
+        <Style x:Key="KpiCard" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="Margin" Value="0,0,10,10" />
+            <Setter Property="MinWidth" Value="140" />
+            <Setter Property="BorderBrush" Value="#D9E2EC" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style x:Key="ResultRow" TargetType="DataGridRow">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SeverityText}" Value="Critical">
+                    <Setter Property="Foreground" Value="#B71C1C" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsReviewed}" Value="True">
+                    <Setter Property="Foreground" Value="#7B8794" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#1F3A5F" Padding="16,10">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left">
+                    <TextBlock Text="Below Ceiling Check" Foreground="White" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock Text="MEP coordination - visual inspection after clash detection" Foreground="#BCCCDC" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Orientation="Horizontal">
+                    <TextBlock Text="Model:" Foreground="#BCCCDC" Margin="0,0,6,0" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding ModelTitle}" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <Button Content="Reload model" Command="{Binding ReloadModelCommand}" Margin="0" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="370" MinWidth="300" />
+                <ColumnDefinition Width="6" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: options -->
+            <TabControl Grid.Column="0" IsEnabled="{Binding IsNotBusy}">
+                <TabItem Header="Settings">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="10">
+                            <TextBlock Text="Ceiling reference" Style="{StaticResource FieldLabel}" Margin="0,0,0,3" />
+                            <ComboBox SelectedIndex="{Binding ModeIndex}">
+                                <ComboBoxItem Content="Ceiling elements (host and links)" />
+                                <ComboBoxItem Content="Fixed height above level" />
+                            </ComboBox>
+
+                            <StackPanel Visibility="{Binding IsFixedMode, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Style="{StaticResource FieldLabel}">
+                                    <Run Text="Ceiling height above level (" /><Run Text="{Binding UnitText, Mode=OneWay}" /><Run Text=")" />
+                                </TextBlock>
+                                <TextBox Text="{Binding FixedHeight, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <TextBlock Text="Elements to check" Style="{StaticResource FieldLabel}" />
+                            <ComboBox SelectedIndex="{Binding ScopeIndex}">
+                                <ComboBoxItem Content="Entire model" />
+                                <ComboBoxItem Content="Active view only" />
+                                <ComboBoxItem Content="Current selection" />
+                            </ComboBox>
+
+                            <TextBlock Text="Display units" Style="{StaticResource FieldLabel}" />
+                            <ComboBox SelectedIndex="{Binding UnitIndex}">
+                                <ComboBoxItem Content="Millimeters" />
+                                <ComboBoxItem Content="Centimeters" />
+                                <ComboBoxItem Content="Meters" />
+                                <ComboBoxItem Content="Feet" />
+                                <ComboBoxItem Content="Inches" />
+                            </ComboBox>
+
+                            <TextBlock Style="{StaticResource FieldLabel}">
+                                <Run Text="Tolerance (" /><Run Text="{Binding UnitText, Mode=OneWay}" /><Run Text=") - ignore elements lower by less than this" />
+                            </TextBlock>
+                            <TextBox Text="{Binding Tolerance, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <CheckBox Content="Also check minimum headroom (overhead elements above the floor)" Margin="0,12,0,0"
+                                      IsChecked="{Binding CheckHeadroom}" />
+                            <StackPanel IsEnabled="{Binding CheckHeadroom}">
+                                <TextBlock Style="{StaticResource FieldLabel}">
+                                    <Run Text="Minimum headroom (" /><Run Text="{Binding UnitText, Mode=OneWay}" /><Run Text=")" />
+                                </TextBlock>
+                                <TextBox Text="{Binding MinHeadroom, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <TextBlock Style="{StaticResource FieldLabel}">
+                                <Run Text="Section box / zoom padding (" /><Run Text="{Binding UnitText, Mode=OneWay}" /><Run Text=")" />
+                            </TextBlock>
+                            <TextBox Text="{Binding SectionPadding, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <TextBlock Text="Ignore keywords (separate with ; or ,)" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding IgnoreKeywords, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Elements whose category, family, type or system contains any keyword are skipped. Example: Bracket; Support; Hanger" />
+
+                            <TextBlock Text="Report - company" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="Report - prepared by" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding PreparedBy, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <CheckBox Content="Select and zoom when a result row is clicked" Margin="0,12,0,0"
+                                      IsChecked="{Binding AutoSelect}" />
+                            <CheckBox Margin="0,8,0,0" IsChecked="{Binding MarkLinked}">
+                                <TextBlock TextWrapping="Wrap" Text="Colour linked elements and ceilings: when isolating or creating the 3D check view, draw temporary marker copies of them (adds removable Generic Model DirectShapes; Clear highlight deletes them)" />
+                            </CheckBox>
+
+                            <Button Content="Reset to defaults" Command="{Binding ResetSettingsCommand}" Margin="0,12,0,0" HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Categories">
+                    <DockPanel Margin="8">
+                        <WrapPanel DockPanel.Dock="Top">
+                            <Button Content="All" Command="{Binding SelectAllCategoriesCommand}" />
+                            <Button Content="None" Command="{Binding ClearCategoriesCommand}" />
+                            <Button Content="Defaults" Command="{Binding DefaultCategoriesCommand}" />
+                        </WrapPanel>
+                        <ListBox ItemsSource="{Binding CategoriesView}" BorderThickness="0" Background="Transparent">
+                            <ListBox.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#1F3A5F" Margin="0,8,0,2" />
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListBox.GroupStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected}" Margin="10,1,0,1" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </TabItem>
+
+                <TabItem Header="Levels">
+                    <DockPanel Margin="8">
+                        <WrapPanel DockPanel.Dock="Top">
+                            <Button Content="All" Command="{Binding SelectAllLevelsCommand}" />
+                            <Button Content="None" Command="{Binding ClearLevelsCommand}" />
+                        </WrapPanel>
+                        <ListBox ItemsSource="{Binding Levels}" BorderThickness="0" Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </TabItem>
+
+                <TabItem Header="Models">
+                    <DockPanel Margin="8">
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock Text="Host model" FontWeight="SemiBold" Foreground="#1F3A5F" />
+                            <CheckBox Content="Contains ceilings" IsChecked="{Binding UseHostCeilings}" />
+                            <CheckBox Content="Contains MEP elements" IsChecked="{Binding UseHostMep}" />
+                            <TextBlock Text="Linked models" FontWeight="SemiBold" Foreground="#1F3A5F" Margin="0,10,0,4" />
+                            <TextBlock TextWrapping="Wrap" Foreground="#52606D" Margin="0,0,0,6"
+                                       Text="Roles are suggested from the link name. Linked MEP is checked for 'Entire model' scope only." />
+                        </StackPanel>
+                        <DataGrid ItemsSource="{Binding Links}" AutoGenerateColumns="False" CanUserAddRows="False"
+                                  CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Link" Binding="{Binding Name, Mode=OneWay}" IsReadOnly="True" Width="*" />
+                                <DataGridCheckBoxColumn Header="Loaded" Binding="{Binding IsLoaded, Mode=OneWay}" IsReadOnly="True" />
+                                <DataGridCheckBoxColumn Header="Ceilings" Binding="{Binding UseForCeilings, UpdateSourceTrigger=PropertyChanged}" />
+                                <DataGridCheckBoxColumn Header="MEP" Binding="{Binding UseForMep, UpdateSourceTrigger=PropertyChanged}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+            </TabControl>
+
+            <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" Background="Transparent" />
+
+            <!-- Right: actions and results -->
+            <DockPanel Grid.Column="2">
+                <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,2">
+                    <Button Content="Run check" Command="{Binding RunCheckCommand}" Style="{StaticResource PrimaryButton}" />
+                    <Button Content="Cancel" Command="{Binding CancelCommand}" />
+                    <Button Content="Visual check" Command="{Binding VisualCheckCommand}" ToolTip="Select the element and its ceiling, colour both and zoom to them (also in the right-click menu)" />
+                    <Button Content="Clear highlight" Command="{Binding ClearHighlightCommand}" />
+                    <Button Content="Select" Command="{Binding SelectCommand}" ToolTip="Select the host elements in Revit" />
+                    <Button Content="Zoom" Command="{Binding ZoomCommand}" ToolTip="Zoom the active view to the elements" />
+                    <Button Content="Isolate" Command="{Binding IsolateCommand}" ToolTip="Temporarily isolate the elements in the active view" />
+                    <Button Content="Reset isolate" Command="{Binding ResetIsolateCommand}" />
+                    <Button Content="Colour" Command="{Binding ColorCommand}" ToolTip="Override graphics in the active view: red = critical, orange = warning" />
+                    <Button Content="Reset colour" Command="{Binding ResetColorCommand}" />
+                    <Button Content="Section box" Command="{Binding SectionBoxCommand}" ToolTip="Apply a section box in the active 3D view" />
+                    <Button Content="Review 3D view" Command="{Binding ReviewViewCommand}" ToolTip="Create a coloured 3D review view with a section box" />
+                    <Button Content="Mark reviewed" Command="{Binding MarkReviewedCommand}" />
+                    <Button Content="Write comments" Command="{Binding MarkCommentsCommand}" ToolTip="Write a [BCC] note into the Comments parameter" />
+                    <Button Content="Clear comments" Command="{Binding ClearCommentsCommand}" />
+                    <Button Content="Export CSV" Command="{Binding ExportCsvCommand}" />
+                    <Button Content="HTML report" Command="{Binding ExportHtmlCommand}" />
+                </WrapPanel>
+
+                <TabControl>
+                    <TabItem Header="Results">
+                        <DockPanel Margin="8">
+                            <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                                <TextBlock Text="Severity" VerticalAlignment="Center" Margin="0,0,6,6" />
+                                <ComboBox Width="120" SelectedIndex="{Binding SeverityFilterIndex}" Margin="0,0,12,6">
+                                    <ComboBoxItem Content="All" />
+                                    <ComboBoxItem Content="Critical" />
+                                    <ComboBoxItem Content="Warning" />
+                                    <ComboBoxItem Content="Headroom" />
+                                </ComboBox>
+                                <TextBlock Text="Category" VerticalAlignment="Center" Margin="0,0,6,6" />
+                                <ComboBox Width="170" ItemsSource="{Binding FilterCategories}" SelectedItem="{Binding SelectedFilterCategory}" Margin="0,0,12,6" />
+                                <TextBlock Text="Search" VerticalAlignment="Center" Margin="0,0,6,6" />
+                                <TextBox Width="190" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,6" />
+                                <CheckBox Content="Hide reviewed" IsChecked="{Binding HideReviewed}" VerticalAlignment="Center" Margin="0,0,12,6" />
+                                <TextBlock Text="{Binding VisibleText}" VerticalAlignment="Center" Foreground="#52606D" Margin="0,0,0,6" />
+                            </WrapPanel>
+
+                            <DataGrid x:Name="ResultsGrid" ItemsSource="{Binding ResultsView}" AutoGenerateColumns="False"
+                                      CanUserAddRows="False" CanUserDeleteRows="False" SelectionMode="Extended"
+                                      HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                      AlternatingRowBackground="#F7F9FB" RowStyle="{StaticResource ResultRow}"
+                                      SelectionChanged="ResultsGrid_SelectionChanged"
+                                      MouseDoubleClick="ResultsGrid_MouseDoubleClick"
+                                      PreviewMouseRightButtonDown="ResultsGrid_PreviewMouseRightButtonDown"
+                                      ContextMenuOpening="ResultsGrid_ContextMenuOpening">
+                                <DataGrid.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Select and highlight element in active view"
+                                                  Command="{Binding PlacementTarget.DataContext.HighlightCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Visual check: select element + the ceiling(s) it is below"
+                                                  Command="{Binding PlacementTarget.DataContext.VisualCheckCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Visual check, isolated (host + linked, only the two shown)"
+                                                  Command="{Binding PlacementTarget.DataContext.VisualCheckIsolatedCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Create 3D check view (element + ceiling(s))"
+                                                  Command="{Binding PlacementTarget.DataContext.CheckViewCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        <Separator />
+                                        <MenuItem Header="Zoom to element"
+                                                  Command="{Binding PlacementTarget.DataContext.ZoomCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Clear highlight and isolation"
+                                                  Command="{Binding PlacementTarget.DataContext.ClearHighlightCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        <Separator />
+                                        <MenuItem Header="Mark as reviewed"
+                                                  Command="{Binding PlacementTarget.DataContext.MarkReviewedCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        <MenuItem Header="Copy element Id(s)"
+                                                  Command="{Binding PlacementTarget.DataContext.CopyIdsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                    </ContextMenu>
+                                </DataGrid.ContextMenu>
+                                <DataGrid.Columns>
+                                    <DataGridCheckBoxColumn Header="Done" Binding="{Binding IsReviewed, UpdateSourceTrigger=PropertyChanged}" />
+                                    <DataGridTextColumn Header="#" Binding="{Binding Number, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Severity" Binding="{Binding SeverityText, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Source" Binding="{Binding SourceText, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Id" Binding="{Binding ElementIdValue, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Category" Binding="{Binding Category, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Family" Binding="{Binding Family, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Type" Binding="{Binding TypeName, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="System" Binding="{Binding SystemName, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Level" Binding="{Binding LevelName, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Ceiling" Binding="{Binding CeilingName, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Ceiling Id" Binding="{Binding CeilingIdText, Mode=OneWay}" SortMemberPath="CeilingIdValue" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Ceiling model" Binding="{Binding CeilingModelText, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Ceilings below" Binding="{Binding CeilingCountText, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Extent" Binding="{Binding ExtentText, Mode=OneWay}" SortMemberPath="BelowFraction" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Depth below ceiling" Binding="{Binding DepthText, Mode=OneWay}" SortMemberPath="DepthFt" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Bottom AFF" Binding="{Binding BottomAffText, Mode=OneWay}" SortMemberPath="BottomAffFt" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Ceiling AFF" Binding="{Binding CeilingAffText, Mode=OneWay}" SortMemberPath="CeilingAffFt" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Headroom" Binding="{Binding HeadroomText, Mode=OneWay}" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Notes" Binding="{Binding Notes, UpdateSourceTrigger=LostFocus}" Width="160" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </TabItem>
+
+                    <TabItem Header="Summary">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="10">
+                                <WrapPanel>
+                                    <Border Style="{StaticResource KpiCard}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding ElementsChecked}" FontSize="26" FontWeight="SemiBold" />
+                                            <TextBlock Text="Elements checked" Foreground="#52606D" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource KpiCard}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding CriticalCount}" FontSize="26" FontWeight="SemiBold" Foreground="#C62828" />
+                                            <TextBlock Text="Critical (fully below)" Foreground="#52606D" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource KpiCard}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding WarningCount}" FontSize="26" FontWeight="SemiBold" Foreground="#EF6C00" />
+                                            <TextBlock Text="Warning (crossing / headroom)" Foreground="#52606D" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource KpiCard}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding HeadroomCount}" FontSize="26" FontWeight="SemiBold" />
+                                            <TextBlock Text="Headroom issues" Foreground="#52606D" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource KpiCard}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding CeilingFaceCount}" FontSize="26" FontWeight="SemiBold" />
+                                            <TextBlock Text="Ceiling faces read" Foreground="#52606D" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock Text="By category" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                        <DataGrid ItemsSource="{Binding ByCategory}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" CanUserAddRows="False">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Category" Binding="{Binding Label, Mode=OneWay}" Width="*" />
+                                                <DataGridTextColumn Header="Count" Binding="{Binding Count, Mode=OneWay}" />
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="4,0,4,0">
+                                        <TextBlock Text="By level" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                        <DataGrid ItemsSource="{Binding ByLevel}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" CanUserAddRows="False">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Level" Binding="{Binding Label, Mode=OneWay}" Width="*" />
+                                                <DataGridTextColumn Header="Count" Binding="{Binding Count, Mode=OneWay}" />
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Margin="8,0,0,0">
+                                        <TextBlock Text="By system" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                        <DataGrid ItemsSource="{Binding BySystem}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" CanUserAddRows="False">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="System" Binding="{Binding Label, Mode=OneWay}" Width="*" />
+                                                <DataGridTextColumn Header="Count" Binding="{Binding Count, Mode=OneWay}" />
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Header="Log">
+                        <TextBox Text="{Binding LogText, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto" Margin="8" />
+                    </TabItem>
+                </TabControl>
+            </DockPanel>
+        </Grid>
+
+        <!-- Status bar -->
+        <Border Grid.Row="2" Background="White" BorderBrush="#D9E2EC" BorderThickness="0,1,0,0" Padding="12,6">
+            <DockPanel>
+                <ProgressBar DockPanel.Dock="Right" Width="220" Height="14" Minimum="0" Maximum="1" Value="{Binding Progress, Mode=OneWay}" />
+                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Margin="0,0,12,0" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>
