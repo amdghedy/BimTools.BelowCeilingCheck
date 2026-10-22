@@ -8,11 +8,12 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  actions: read
 
 jobs:
   build:
-    name: Revit ${{ matrix.revit }} / build
+    name: Revit \${{ matrix.revit }} / build
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -35,24 +36,124 @@ jobs:
         run: >
           dotnet build ./BimTools.BelowCeilingCheck.csproj
           --configuration Release
-          -p:RevitVersion=${{ matrix.revit }}
+          -p:RevitVersion=\${{ matrix.revit }}
           -p:DeployAddin=false
-          -p:BaseOutputPath="artifacts/Revit${{ matrix.revit }}/"
+          -p:BaseOutputPath="artifacts/Revit\${{ matrix.revit }}/"
 
       - name: Stage plugin manifest
         shell: pwsh
         run: |
-          $out = Get-ChildItem "artifacts/Revit${{ matrix.revit }}" -Directory -Recurse |
+          $out = Get-ChildItem "artifacts/Revit\${{ matrix.revit }}" -Directory -Recurse |
             Where-Object { Test-Path (Join-Path $_.FullName "BimTools.BelowCeilingCheck.dll") } |
             Select-Object -First 1 -ExpandProperty FullName
-          if (-not $out) { throw "Build output DLL was not found for Revit ${{ matrix.revit }}." }
+          if (-not $out) { throw "Build output DLL was not found for Revit \${{ matrix.revit }}." }
           Copy-Item "./BelowCeilingCheck.addin" $out -Force
           "Build output: $out"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BelowCeilingCheck-Revit${{ matrix.revit }}
-          path: artifacts/Revit${{ matrix.revit }}/
+          name: BelowCeilingCheck-Revit\${{ matrix.revit }}
+          path: artifacts/Revit\${{ matrix.revit }}/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 90
+
+  publish-version-folders:
+    name: Publish compiled DLLs to version folders
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download all version build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: BelowCeilingCheck-Revit*
+          path: downloaded-packages
+          merge-multiple: false
+
+      - name: Create version-specific install packages
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $versions = @("2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027")
+          foreach ($version in $versions) {
+            $artifact = Join-Path $PWD "downloaded-packages/BelowCeilingCheck-Revit$version"
+            if (-not (Test-Path $artifact)) {
+              throw "Build artifact for Revit $version is missing: $artifact"
+            }
+
+            $dll = Get-ChildItem $artifact -Filter "BimTools.BelowCeilingCheck.dll" -File -Recurse |
+              Select-Object -First 1
+            if (-not $dll) { throw "Compiled DLL for Revit $version was not found." }
+
+            $manifest = Get-ChildItem $artifact -Filter "BelowCeilingCheck.addin" -File -Recurse |
+              Select-Object -First 1
+            if (-not $manifest) { throw "Add-in manifest for Revit $version was not found." }
+
+            $destination = Join-Path $PWD "Revit Versions/Revit $version"
+            $assemblyFolder = Join-Path $destination "BimTools.BelowCeilingCheck"
+            New-Item -ItemType Directory -Path $assemblyFolder -Force | Out-Null
+            Copy-Item $dll.FullName (Join-Path $assemblyFolder "BimTools.BelowCeilingCheck.dll") -Force
+            Copy-Item $manifest.FullName (Join-Path $destination "BelowCeilingCheck.addin") -Force
+
+            $installer = @'
+          $ErrorActionPreference = "Stop"
+          $RevitVersion = "__VERSION__"
+          $SourceRoot = $PSScriptRoot
+          $AddinsRoot = Join-Path $env:APPDATA "Autodesk\Revit\Addins\$RevitVersion"
+          $AssemblyFolder = Join-Path $AddinsRoot "BimTools.BelowCeilingCheck"
+          if (-not (Test-Path (Join-Path $SourceRoot "BimTools.BelowCeilingCheck.dll"))) {
+            throw "DLL is missing from the package folder."
+          }
+          New-Item -ItemType Directory -Path $AssemblyFolder -Force | Out-Null
+          Copy-Item (Join-Path $SourceRoot "BimTools.BelowCeilingCheck.dll") (Join-Path $AssemblyFolder "BimTools.BelowCeilingCheck.dll") -Force
+          Copy-Item (Join-Path $PSScriptRoot "BelowCeilingCheck.addin") (Join-Path $AddinsRoot "BelowCeilingCheck.addin") -Force
+          Write-Host "Below Ceiling Check installed for Revit $RevitVersion." -ForegroundColor Green
+          Write-Host "Restart Revit to load the add-in."
+          '@
+            $installer = $installer.Replace("__VERSION__", $version)
+            Set-Content -Path (Join-Path $destination "Install-BelowCeilingCheck.ps1") -Value $installer -Encoding utf8
+
+            $readme = @"
+          BIM TOOLS - Below Ceiling Check
+          Revit version: $version
+
+          Files:
+          - BimTools.BelowCeilingCheck.dll: compiled add-in for Revit $version
+          - BelowCeilingCheck.addin: Revit add-in manifest
+          - Install-BelowCeilingCheck.ps1: copies files to the current user's Revit Addins folder
+
+          Installation:
+          1. Close Revit $version.
+          2. Keep the DLL and manifest together in this package folder.
+          3. Run Install-BelowCeilingCheck.ps1 from this folder in PowerShell.
+          4. Start Revit $version.
+
+          The installer writes only to the current user's AppData\Roaming\Autodesk\Revit\Addins\$version folder.
+          "@
+            Set-Content -Path (Join-Path $destination "README-INSTALL.txt") -Value $readme -Encoding utf8
+            Write-Host "Prepared Revit $version package."
+          }
+
+      - name: Commit version folders to main
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "Revit Versions"
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "Publish Below Ceiling Check DLLs for Revit 2020-2027"
+            git push origin HEAD:main
+          } else {
+            Write-Host "Version folders are already up to date."
+          }
