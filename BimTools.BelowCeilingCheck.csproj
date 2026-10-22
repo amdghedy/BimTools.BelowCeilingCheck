@@ -1,7 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <RevitVersion Condition="'$(RevitVersion)' == ''">2020</RevitVersion>
+    <TargetFramework Condition="'$(RevitVersion)' &lt;= '2024'">net48</TargetFramework>
+    <TargetFramework Condition="'$(RevitVersion)' == '2025' Or '$(RevitVersion)' == '2026'">net8.0-windows</TargetFramework>
+    <TargetFramework Condition="'$(RevitVersion)' == '2027'">net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <AssemblyName>BimTools.BelowCeilingCheck</AssemblyName>
     <RootNamespace>BimTools.BelowCeilingCheck</RootNamespace>
@@ -11,21 +14,18 @@
     <Product>BIM TOOLS - Below Ceiling Check</Product>
     <Description>MEP coordination tool that reports model elements located below the ceiling.</Description>
     <Copyright>Copyright (c) BIM TOOLS</Copyright>
-    <RevitVersion>2020</RevitVersion>
     <RevitInstallDir Condition="'$(RevitInstallDir)' == ''">C:\Program Files\Autodesk\Revit $(RevitVersion)\</RevitInstallDir>
     <AddinsDir>$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\</AddinsDir>
     <DebugType>portable</DebugType>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="RevitAPI">
-      <HintPath>$(RevitInstallDir)RevitAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPIUI">
-      <HintPath>$(RevitInstallDir)RevitAPIUI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 
@@ -35,9 +35,8 @@
     </None>
   </ItemGroup>
 
-  <!-- Copies the DLL and the manifest into the Revit 2020 add-ins folder after every build.
-       If Revit is running it keeps the DLL locked: the copy then only warns, so close Revit and rebuild to deploy. -->
-  <Target Name="DeployAddin" AfterTargets="Build">
+  <!-- Local deployment is opt-in; GitHub Actions must only compile and package. -->
+  <Target Name="DeployAddin" AfterTargets="Build" Condition="'$(DeployAddin)' == 'true'">
     <MakeDir Directories="$(AddinsDir)BimTools.BelowCeilingCheck" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(AddinsDir)BimTools.BelowCeilingCheck" Retries="1" ContinueOnError="true" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)\BelowCeilingCheck.addin" DestinationFolder="$(AddinsDir)" Retries="1" ContinueOnError="true" />
