@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using BimTools.BelowCeilingCheck.Models;
+using BimTools.BelowCeilingCheck.Infrastructure;
 
 namespace BimTools.BelowCeilingCheck.Services
 {
@@ -140,7 +141,7 @@ namespace BimTools.BelowCeilingCheck.Services
         {
             Document doc = uiDoc.Document;
             ElementId viewTypeId = Find3DViewTypeId(doc);
-            if (viewTypeId.IntegerValue == ElementId.InvalidElementId.IntegerValue)
+            if (ElementIdCompat.GetValue(viewTypeId) == ElementIdCompat.GetValue(ElementId.InvalidElementId))
             {
                 throw new InvalidOperationException("The project has no 3D view type, so a check view cannot be created.");
             }
@@ -350,7 +351,7 @@ namespace BimTools.BelowCeilingCheck.Services
             settings.SetProjectionLineColor(cyan);
             settings.SetSurfaceForegroundPatternColor(cyan);
             settings.SetSurfaceTransparency(35);
-            if (solidFill.IntegerValue != ElementId.InvalidElementId.IntegerValue)
+            if (ElementIdCompat.GetValue(solidFill) != ElementIdCompat.GetValue(ElementId.InvalidElementId))
             {
                 settings.SetSurfaceForegroundPatternId(solidFill);
             }
@@ -608,7 +609,7 @@ namespace BimTools.BelowCeilingCheck.Services
             bool zoomed = false;
             foreach (UIView uiView in uiDoc.GetOpenUIViews())
             {
-                if (uiView.ViewId.IntegerValue == active.Id.IntegerValue)
+                if (ElementIdCompat.GetValue(uiView.ViewId) == ElementIdCompat.GetValue(active.Id))
                 {
                     uiView.ZoomAndCenterRectangle(min, max);
                     zoomed = true;
@@ -807,7 +808,7 @@ namespace BimTools.BelowCeilingCheck.Services
             OperationReport report = new OperationReport();
             Document doc = uiDoc.Document;
             ElementId viewTypeId = Find3DViewTypeId(doc);
-            if (viewTypeId.IntegerValue == ElementId.InvalidElementId.IntegerValue)
+            if (ElementIdCompat.GetValue(viewTypeId) == ElementIdCompat.GetValue(ElementId.InvalidElementId))
             {
                 throw new InvalidOperationException("The project has no 3D view type, so a review view cannot be created.");
             }
@@ -971,7 +972,7 @@ namespace BimTools.BelowCeilingCheck.Services
             OverrideGraphicSettings settings = new OverrideGraphicSettings();
             settings.SetProjectionLineColor(color);
             settings.SetSurfaceForegroundPatternColor(color);
-            if (solidFill.IntegerValue != ElementId.InvalidElementId.IntegerValue)
+            if (ElementIdCompat.GetValue(solidFill) != ElementIdCompat.GetValue(ElementId.InvalidElementId))
             {
                 settings.SetSurfaceForegroundPatternId(solidFill);
             }
