@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Autodesk.Revit.DB;
 using BimTools.BelowCeilingCheck.Models;
+using BimTools.BelowCeilingCheck.Infrastructure;
 
 namespace BimTools.BelowCeilingCheck.Services
 {
@@ -53,7 +54,7 @@ namespace BimTools.BelowCeilingCheck.Services
                         }
 
                         Document linkDoc = instance.GetLinkDocument();
-                        links.Add(new LinkOption(instance.Name, instance.Id.IntegerValue, linkDoc != null));
+                        links.Add(new LinkOption(instance.Name, ElementIdCompat.GetValue(instance.Id), linkDoc != null));
                     }
                     finally
                     {
