@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    name: Revit \${{ matrix.revit }} / build
+    name: Revit ${{ matrix.revit }} / build
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -36,25 +36,25 @@ jobs:
         run: >
           dotnet build ./BimTools.BelowCeilingCheck.csproj
           --configuration Release
-          -p:RevitVersion=\${{ matrix.revit }}
+          -p:RevitVersion=${{ matrix.revit }}
           -p:DeployAddin=false
-          -p:BaseOutputPath="artifacts/Revit\${{ matrix.revit }}/"
+          -p:BaseOutputPath="artifacts/Revit${{ matrix.revit }}/"
 
       - name: Stage plugin manifest
         shell: pwsh
         run: |
-          $out = Get-ChildItem "artifacts/Revit\${{ matrix.revit }}" -Directory -Recurse |
+          $out = Get-ChildItem "artifacts/Revit${{ matrix.revit }}" -Directory -Recurse |
             Where-Object { Test-Path (Join-Path $_.FullName "BimTools.BelowCeilingCheck.dll") } |
             Select-Object -First 1 -ExpandProperty FullName
-          if (-not $out) { throw "Build output DLL was not found for Revit \${{ matrix.revit }}." }
+          if (-not $out) { throw "Build output DLL was not found for Revit ${{ matrix.revit }}." }
           Copy-Item "./BelowCeilingCheck.addin" $out -Force
           "Build output: $out"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: BelowCeilingCheck-Revit\${{ matrix.revit }}
-          path: artifacts/Revit\${{ matrix.revit }}/
+          name: BelowCeilingCheck-Revit${{ matrix.revit }}
+          path: artifacts/Revit${{ matrix.revit }}/
           if-no-files-found: error
           retention-days: 90
 
@@ -144,7 +144,7 @@ jobs:
       - name: Commit version folders to main
         shell: pwsh
         env:
-          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $ErrorActionPreference = "Stop"
           git config user.name "github-actions[bot]"
