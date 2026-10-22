@@ -253,7 +253,7 @@ namespace BimTools.BelowCeilingCheck.Services
                 return;
             }
 
-            item.ElementIdValue = element.Id.IntegerValue;
+            item.ElementIdValue = ElementIdCompat.GetValue(element.Id);
             item.IsLinked = source.IsLink;
             item.SourceName = source.Name;
             item.LinkInstanceIdValue = source.InstanceId;
@@ -427,7 +427,7 @@ namespace BimTools.BelowCeilingCheck.Services
             item.TypeName = element.Name;
 
             ElementId typeId = element.GetTypeId();
-            if (typeId != null && typeId.IntegerValue != ElementId.InvalidElementId.IntegerValue)
+            if (typeId != null && ElementIdCompat.GetValue(typeId) != ElementIdCompat.GetValue(ElementId.InvalidElementId))
             {
                 ElementType type = element.Document.GetElement(typeId) as ElementType;
                 try
