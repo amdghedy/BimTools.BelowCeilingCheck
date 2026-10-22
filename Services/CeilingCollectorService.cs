@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Autodesk.Revit.DB;
 using BimTools.BelowCeilingCheck.Geometry;
+using BimTools.BelowCeilingCheck.Infrastructure;
 
 namespace BimTools.BelowCeilingCheck.Services
 {
@@ -30,7 +31,7 @@ namespace BimTools.BelowCeilingCheck.Services
                         string levelName = "(No level)";
                         double levelElevation = 0.0;
                         ElementId levelId = ceiling.LevelId;
-                        if (levelId != null && levelId.IntegerValue != ElementId.InvalidElementId.IntegerValue)
+                        if (levelId != null && ElementIdCompat.GetValue(levelId) != ElementIdCompat.GetValue(ElementId.InvalidElementId))
                         {
                             Level level = doc.GetElement(levelId) as Level;
                             if (level != null)
@@ -52,7 +53,7 @@ namespace BimTools.BelowCeilingCheck.Services
                         {
                             if (geometry != null)
                             {
-                                CollectFaces(geometry, transform, ceiling.Id.IntegerValue, ceilingName, levelName, levelElevation, sourceName, faces);
+                                CollectFaces(geometry, transform, ElementIdCompat.GetValue(ceiling.Id), ceilingName, levelName, levelElevation, sourceName, faces);
                             }
                         }
 
@@ -79,7 +80,7 @@ namespace BimTools.BelowCeilingCheck.Services
         private static string GetTypeName(Document doc, Element ceiling)
         {
             ElementId typeId = ceiling.GetTypeId();
-            if (typeId == null || typeId.IntegerValue == ElementId.InvalidElementId.IntegerValue)
+            if (typeId == null || ElementIdCompat.GetValue(typeId) == ElementIdCompat.GetValue(ElementId.InvalidElementId))
             {
                 return ceiling.Name;
             }
@@ -295,7 +296,7 @@ namespace BimTools.BelowCeilingCheck.Services
                 face.NormalX = 0.0;
                 face.NormalY = 0.0;
                 face.NormalZ = -1.0;
-                face.CeilingIdValue = ceiling.Id.IntegerValue;
+                face.CeilingIdValue = ElementIdCompat.GetValue(ceiling.Id);
                 face.CeilingName = ceilingName;
                 face.LevelName = levelName;
                 face.LevelElevationFt = levelElevation;
