@@ -18,6 +18,7 @@
     <AddinsDir>$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\</AddinsDir>
     <DebugType>portable</DebugType>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <DefineConstants Condition="'$(RevitVersion)' == '2026' Or '$(RevitVersion)' == '2027'">$(DefineConstants);REVIT2026_OR_GREATER</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
