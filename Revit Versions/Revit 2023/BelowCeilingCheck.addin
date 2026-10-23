@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>BIM TOOLS - Below Ceiling Check</Name>
+    <Assembly>BimTools.BelowCeilingCheck\BimTools.BelowCeilingCheck.dll</Assembly>
+    <AddInId>7C1D3B2E-5A4F-4E8B-9D21-3F6A8C0B5E71</AddInId>
+    <FullClassName>BimTools.BelowCeilingCheck.App</FullClassName>
+    <VendorId>BIMT</VendorId>
+    <VendorDescription>BIM TOOLS</VendorDescription>
+  </AddIn>
+</RevitAddIns>
