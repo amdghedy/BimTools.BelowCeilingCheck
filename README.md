@@ -8,7 +8,6 @@ Below Ceiling Check helps BIM and MEP teams identify model elements located belo
   <strong>Revit 2020–2027</strong> · <strong>Windows</strong> · <strong>C# / .NET</strong>
 </p>
 
----
 
 ## Complete feature and options reference
 
@@ -103,7 +102,7 @@ Visual/view operations depend on the active Revit view and the available model g
 ## Revit compatibility
 
 | Revit version | Target runtime |
-|---|---|
+|-|-|
 | 2020–2024 | .NET Framework 4.8 |
 | 2025–2026 | .NET 8 |
 | 2027 | .NET 10 |
@@ -146,7 +145,7 @@ Only run scripts you have reviewed and trust. To uninstall, close Revit and remo
 From the repository root, run the command for the required version:
 
 ```powershell
-dotnet build .\BimTools.BelowCeilingCheck.csproj --configuration Release -p:RevitVersion=2025 -p:DeployAddin=false
+dotnet build .\BimTools.BelowCeilingCheck.csproj -c Release -p:RevitVersion=2025 -p:DeployAddin=false
 ```
 
 Replace `2025` with a supported version from 2020 to 2027. The project targets .NET Framework 4.8 for Revit 2020–2024, .NET 8 for Revit 2025–2026, and .NET 10 for Revit 2027.
@@ -196,6 +195,5 @@ Each published version folder is intended to contain:
 
 Bug reports, reproducible examples, and focused improvements are welcome. Include your Revit version, the steps to reproduce the issue, and any relevant error message.
 
----
 
 **BIM TOOLS — practical utilities for better BIM delivery and coordination.**
