@@ -53,7 +53,7 @@ namespace BimTools.BelowCeilingCheck.Services
                         {
                             if (geometry != null)
                             {
-                                CollectFaces(geometry, transform, ElementIdCompat.GetValue(ceiling.Id), ceilingName, levelName, levelElevation, sourceName, faces);
+                                CollectFaces(geometry, transform, (int)ElementIdCompat.GetValue(ceiling.Id), ceilingName, levelName, levelElevation, sourceName, faces);
                             }
                         }
 
@@ -296,7 +296,7 @@ namespace BimTools.BelowCeilingCheck.Services
                 face.NormalX = 0.0;
                 face.NormalY = 0.0;
                 face.NormalZ = -1.0;
-                face.CeilingIdValue = ElementIdCompat.GetValue(ceiling.Id);
+                face.CeilingIdValue = (int)ElementIdCompat.GetValue(ceiling.Id);
                 face.CeilingName = ceilingName;
                 face.LevelName = levelName;
                 face.LevelElevationFt = levelElevation;
