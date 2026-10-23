@@ -54,7 +54,7 @@ namespace BimTools.BelowCeilingCheck.Services
                         }
 
                         Document linkDoc = instance.GetLinkDocument();
-                        links.Add(new LinkOption(instance.Name, ElementIdCompat.GetValue(instance.Id), linkDoc != null));
+                        links.Add(new LinkOption(instance.Name, (int)ElementIdCompat.GetValue(instance.Id), linkDoc != null));
                     }
                     finally
                     {
