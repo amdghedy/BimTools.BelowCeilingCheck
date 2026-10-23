@@ -10,6 +10,87 @@ Below Ceiling Check helps BIM and MEP teams identify model elements located belo
 
 ---
 
+## Complete feature and options reference
+
+Below Ceiling Check combines model analysis, configurable filters, visual verification, review tracking, and report export in one modeless Revit window.
+
+### 1. Ceiling reference and check scope
+
+- **Ceiling elements (host and links):** use ceiling geometry in the host model and selected loaded linked models as the ceiling reference.
+- **Fixed height above level:** use a user-defined ceiling/reference height above each level when ceiling elements are unavailable or a fixed datum is preferred.
+- **Scope — Entire model:** check eligible elements across the project; linked MEP checking is supported in this scope.
+- **Scope — Active view only:** limit the check to elements visible/eligible in the active view.
+- **Scope — Current selection:** check the elements selected in Revit.
+- **Display units:** millimeters, centimeters, meters, feet, or inches.
+- **Tolerance:** configure the vertical tolerance used to ignore very small below-ceiling differences.
+- **Minimum headroom check:** optionally flag overhead elements that reduce clearance above the floor; configure the minimum required headroom.
+- **Section box / zoom padding:** set the surrounding margin used when zooming or framing a review area.
+- **Ignore keywords:** skip elements when their category, family, type, or system contains a configured keyword. Separate terms with semicolons or commas.
+- **Reset to defaults:** restore the standard check settings.
+- **Saved settings:** settings are handled through the add-in settings service and reused by the tool.
+
+### 2. Category, level, and model filters
+
+- **Categories tab:** select individual categories to include; use **All**, **None**, or **Defaults** for quick selection.
+- **Levels tab:** select specific ceiling levels; use **All** or **None**.
+- **Host model controls:** independently enable host-model ceilings and host-model MEP elements.
+- **Linked-model controls:** see each Revit link, its loaded status, and choose whether it supplies ceiling references, MEP elements, or both.
+- Link roles can be suggested from the link name; the check uses the roles selected by the user.
+- The available category list is grouped for easier navigation.
+
+### 3. Results table, search, and review
+
+Each finding can include the element ID, category, family, type, system, level, ceiling name and ID, ceiling source model, number of ceilings below, below-ceiling extent, depth below ceiling, bottom elevation above finished floor (AFF), ceiling AFF, headroom status, review status, and notes.
+
+- **Severity filter:** show All, Critical, Warning, or Headroom findings.
+- **Category filter:** narrow results to a selected category.
+- **Search:** search the result set using the available result text.
+- **Hide reviewed:** focus on findings that still need review.
+- **Reviewed checkbox / Mark reviewed:** track completed reviews.
+- **Notes:** add notes to individual findings.
+- **Sort and multi-select:** use the results grid to sort columns and select multiple findings.
+- **Visible count:** see how many results remain visible after filters.
+- **Copy element IDs:** copy IDs from selected rows.
+- **Row interaction:** double-click or select a row to access the associated model element; automatic selection and zoom can be enabled in Settings.
+
+### 4. Revit visual investigation and view tools
+
+- **Visual check:** select the element and the ceiling(s) it is below, colour them, and zoom to the relevant area.
+- **Select:** select the host-model elements in Revit.
+- **Zoom:** zoom the active view to the selected finding(s).
+- **Isolate / Reset isolate:** temporarily isolate elements in the active view and restore the previous view state.
+- **Colour / Reset colour:** apply or clear view graphic overrides; critical findings use red and warnings use orange.
+- **Section box:** apply a section box in an active 3D view using the configured padding.
+- **Review 3D view:** create a coloured 3D review view with a section box.
+- **Create 3D check view:** create a focused view of a result element and its ceiling(s).
+- **Visual check, isolated:** focus the view on the host and linked element/ceiling pair for targeted inspection.
+- **Highlight and clear highlight:** highlight the relevant objects and clear temporary highlighting/isolation.
+- **Linked-element markers:** optionally create temporary Generic Model DirectShape markers to represent linked elements and ceilings in view operations. Use **Clear highlight** to remove these temporary markers.
+- **Reload model:** refresh the model information and link list in the open tool.
+- **Cancel:** request cancellation of an active check.
+
+Visual/view operations depend on the active Revit view and the available model geometry. Review findings in context before design or construction decisions.
+
+### 5. Comments and report outputs
+
+- **Write comments:** write a `[BCC]` note to the Revit element's Comments parameter for traceability.
+- **Clear comments:** remove the tool's comments.
+- **Export CSV:** export findings to a UTF-8 CSV that can be opened in Excel, including severity, source, IDs, category, family/type, system, level, ceiling data, elevations, depth, headroom, reviewed status, and notes.
+- **HTML report:** generate a self-contained, print-ready HTML coordination report with project metadata, run date, reference mode, scope, tolerance, headroom setting, runtime, KPI counts, breakdowns by category/level/system, and the findings table.
+- **Report metadata:** configure the company name and prepared-by fields in Settings.
+- **Spreadsheet safety:** CSV text fields are escaped to reduce formula-injection risk.
+
+### 6. Quick workflow
+
+1. Open a Revit project and launch **BIM TOOLS — Below Ceiling Check**.
+2. Choose the ceiling reference mode, scope, units, tolerance, and optional headroom criteria.
+3. Select the categories and levels to include.
+4. Configure host and linked-model roles.
+5. Click **Run check** and monitor the results.
+6. Filter/search findings, inspect them using visual check or the 3D review tools, and add notes.
+7. Mark reviewed items and optionally write `[BCC]` comments to Revit.
+8. Export a CSV for spreadsheet analysis or an HTML report for coordination review.
+
 ## What it does
 
 - Supports review of model elements positioned below the ceiling.
