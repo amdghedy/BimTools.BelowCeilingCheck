@@ -253,7 +253,7 @@ namespace BimTools.BelowCeilingCheck.Services
                 return;
             }
 
-            item.ElementIdValue = ElementIdCompat.GetValue(element.Id);
+            item.ElementIdValue = (int)ElementIdCompat.GetValue(element.Id);
             item.IsLinked = source.IsLink;
             item.SourceName = source.Name;
             item.LinkInstanceIdValue = source.InstanceId;
